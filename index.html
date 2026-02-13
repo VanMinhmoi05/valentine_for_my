@@ -11,7 +11,7 @@ body{
     overflow:hidden;
     background:radial-gradient(circle at bottom,#0d0d1a,#000);
     font-family:'Segoe UI',sans-serif;
-    color:white;
+    color:rgb(243, 212, 212);
 }
 
 /* INTRO */
@@ -119,93 +119,64 @@ canvas.height=window.innerHeight;
 /* CREATE SVG TULIPS */
 function createTulips(){
 
-    const tulipColors = [
-        {top:"#ff5c7a", mid:"#ff2e63", bottom:"#b3003c"},
-        {top:"#ff9ecb", mid:"#ff5fa2", bottom:"#cc2a6a"},
-        {top:"#ffd84d", mid:"#ffb300", bottom:"#cc8400"}
+    const tulipImages = [
+        "tuylip.png",
+        "tuylip2.png",
+        "tuylip3.png"
     ];
 
     for(let i=0;i<6;i++){
 
-        let tulip = document.createElement("div");
-        tulip.className="tulip";
-        tulip.style.left=(i*15+5)+"%";
-        tulip.style.animationDuration=(4+Math.random()*2)+"s";
-
-        let c = tulipColors[Math.floor(Math.random()*tulipColors.length)];
-
-        tulip.innerHTML = `
-        <svg viewBox="0 0 140 260">
-            <defs>
-                <linearGradient id="petalGrad${i}" x1="50%" y1="0%" x2="50%" y2="100%">
-                    <stop offset="0%" stop-color="${c.top}"/>
-                    <stop offset="50%" stop-color="${c.mid}"/>
-                    <stop offset="100%" stop-color="${c.bottom}"/>
-                </linearGradient>
-
-                <linearGradient id="leafGrad${i}" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#4caf50"/>
-                    <stop offset="100%" stop-color="#1b5e20"/>
-                </linearGradient>
-
-                <filter id="shadow${i}" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
-                </filter>
-            </defs>
-
-            <!-- stem -->
-            <path d="M70 120 C65 170,75 210,70 250" 
-                  stroke="#2e7d32" stroke-width="6" fill="none"/>
-
-            <!-- leaves -->
-            <path d="M70 170 C20 150,20 220,70 200"
-                  fill="url(#leafGrad${i})"/>
-            <path d="M70 180 C120 160,120 230,70 210"
-                  fill="url(#leafGrad${i})"/>
-
-            <!-- bloom -->
-            <g class="bloom" filter="url(#shadow${i})">
-
-                <!-- left petal -->
-                <path d="M70 120 
-                         C35 90,40 40,70 70 
-                         C65 85,65 100,70 120 Z"
-                      fill="url(#petalGrad${i})"/>
-
-                <!-- right petal -->
-                <path d="M70 120 
-                         C105 90,100 40,70 70 
-                         C75 85,75 100,70 120 Z"
-                      fill="url(#petalGrad${i})"/>
-
-                <!-- center petal -->
-                <path d="M70 120
-                         C50 60,90 60,70 35
-                         C50 60,90 60,70 120 Z"
-                      fill="url(#petalGrad${i})"/>
-            </g>
-        </svg>
-        `;
+        let tulip = document.createElement("img");
+        tulip.src = tulipImages[Math.floor(Math.random()*tulipImages.length)];
+        tulip.style.position = "fixed";
+        tulip.style.bottom = "0px";
+        tulip.style.left = (i*15 + 5) + "%";
+        tulip.style.width = "120px";
+        tulip.style.transformOrigin = "bottom center";
+        tulip.style.transform = "scale(0)";
+        tulip.style.transition = "transform 3s ease";
+        tulip.style.animation = "sway 4s ease-in-out infinite alternate";
 
         document.body.appendChild(tulip);
 
-        /* falling petals realistic */
+        // bloom animation
         setTimeout(()=>{
+            tulip.style.transform = "scale(1)";
+        },500);
+
+        // petals fall from real position
+        setTimeout(()=>{
+            const rect = tulip.getBoundingClientRect();
+
             for(let p=0;p<5;p++){
+
                 let petal=document.createElement("div");
-                petal.className="petal";
-                petal.style.left=(tulip.offsetLeft+60)+"px";
-                petal.style.top=(window.innerHeight-200)+"px";
-                petal.style.width="16px";
-                petal.style.height="22px";
-                petal.style.background=c.mid;
+                petal.style.position="fixed";
+                petal.style.left=(rect.left + rect.width/2)+"px";
+                petal.style.top=(rect.top + 40)+"px";
+                petal.style.width="20px";
+                petal.style.height="25px";
+                petal.style.background="pink";
                 petal.style.borderRadius="60% 40% 60% 40%";
-                petal.style.boxShadow="0 4px 8px rgba(0,0,0,0.3)";
-                petal.style.animationDuration=(5+Math.random()*3)+"s";
-                petal.style.animationDelay=(p*0.5)+"s";
+                petal.style.boxShadow="0 6px 12px rgba(0,0,0,0.3)";
+
+                let drift = (Math.random()*150 - 75);
+                let fallDuration = 5 + Math.random()*3;
+
+                petal.animate([
+                    { transform: "translate(0,0) rotate(0deg)", opacity:1 },
+                    { transform: `translate(${drift}px, 700px) rotate(${720}deg)`, opacity:0 }
+                ],{
+                    duration: fallDuration*1000,
+                    easing:"ease-in",
+                    fill:"forwards"
+                });
+
                 document.body.appendChild(petal);
             }
-        },3000);
+
+        },4000);
     }
 }
 
