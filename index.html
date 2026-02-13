@@ -9,7 +9,7 @@
 body{
     margin:0;
     overflow:hidden;
-    background:black;
+    background:radial-gradient(circle at bottom,#0d0d1a,#000);
     font-family:'Segoe UI',sans-serif;
     color:white;
 }
@@ -22,11 +22,10 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    font-size:45px;
+    font-size:50px;
     letter-spacing:8px;
     animation:introFade 4s forwards;
 }
-
 @keyframes introFade{
     0%{opacity:0; transform:scale(1.2);}
     30%{opacity:1;}
@@ -44,6 +43,45 @@ body{
     font-size:26px;
     opacity:0;
     transition:2s;
+}
+
+/* SVG TULIPS */
+.tulip{
+    position:absolute;
+    bottom:0;
+    width:80px;
+    transform-origin:bottom center;
+    animation:sway 4s ease-in-out infinite alternate;
+}
+@keyframes sway{
+    from{ transform:rotate(-3deg); }
+    to{ transform:rotate(3deg); }
+}
+
+.bloom{
+    transform:scale(0);
+    transform-origin:bottom center;
+    animation:bloom 3s forwards;
+}
+@keyframes bloom{
+    to{ transform:scale(1); }
+}
+
+/* PETALS FALL */
+.petal{
+    position:absolute;
+    width:12px;
+    height:18px;
+    background:pink;
+    border-radius:50%;
+    opacity:0.8;
+    animation:fall 5s linear forwards;
+}
+@keyframes fall{
+    to{
+        transform:translateY(600px) rotate(360deg);
+        opacity:0;
+    }
 }
 
 canvas{
@@ -68,156 +106,203 @@ Anh mong những ngày sau này<br>
 
 <canvas id="fireworks"></canvas>
 
-<audio id="music" loop
-src="https://cdn.pixabay.com/audio/2022/03/15/audio_6b7b8df8d8.mp3">
-</audio>
-
 <script>
-document.addEventListener("DOMContentLoaded", function(){
+document.addEventListener("DOMContentLoaded",function(){
 
-const intro = document.querySelector(".intro");
-const msg = document.getElementById("msg");
-const music = document.getElementById("music");
-const canvas = document.getElementById("fireworks");
-const ctx = canvas.getContext("2d");
+const intro=document.querySelector(".intro");
+const msg=document.getElementById("msg");
+const canvas=document.getElementById("fireworks");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+/* CREATE SVG TULIPS */
+function createTulips(){
 
-/* START SEQUENCE */
+    const tulipColors = [
+        {top:"#ff5c7a", mid:"#ff2e63", bottom:"#b3003c"},
+        {top:"#ff9ecb", mid:"#ff5fa2", bottom:"#cc2a6a"},
+        {top:"#ffd84d", mid:"#ffb300", bottom:"#cc8400"}
+    ];
+
+    for(let i=0;i<6;i++){
+
+        let tulip = document.createElement("div");
+        tulip.className="tulip";
+        tulip.style.left=(i*15+5)+"%";
+        tulip.style.animationDuration=(4+Math.random()*2)+"s";
+
+        let c = tulipColors[Math.floor(Math.random()*tulipColors.length)];
+
+        tulip.innerHTML = `
+        <svg viewBox="0 0 140 260">
+            <defs>
+                <linearGradient id="petalGrad${i}" x1="50%" y1="0%" x2="50%" y2="100%">
+                    <stop offset="0%" stop-color="${c.top}"/>
+                    <stop offset="50%" stop-color="${c.mid}"/>
+                    <stop offset="100%" stop-color="${c.bottom}"/>
+                </linearGradient>
+
+                <linearGradient id="leafGrad${i}" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4caf50"/>
+                    <stop offset="100%" stop-color="#1b5e20"/>
+                </linearGradient>
+
+                <filter id="shadow${i}" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#000" flood-opacity="0.4"/>
+                </filter>
+            </defs>
+
+            <!-- stem -->
+            <path d="M70 120 C65 170,75 210,70 250" 
+                  stroke="#2e7d32" stroke-width="6" fill="none"/>
+
+            <!-- leaves -->
+            <path d="M70 170 C20 150,20 220,70 200"
+                  fill="url(#leafGrad${i})"/>
+            <path d="M70 180 C120 160,120 230,70 210"
+                  fill="url(#leafGrad${i})"/>
+
+            <!-- bloom -->
+            <g class="bloom" filter="url(#shadow${i})">
+
+                <!-- left petal -->
+                <path d="M70 120 
+                         C35 90,40 40,70 70 
+                         C65 85,65 100,70 120 Z"
+                      fill="url(#petalGrad${i})"/>
+
+                <!-- right petal -->
+                <path d="M70 120 
+                         C105 90,100 40,70 70 
+                         C75 85,75 100,70 120 Z"
+                      fill="url(#petalGrad${i})"/>
+
+                <!-- center petal -->
+                <path d="M70 120
+                         C50 60,90 60,70 35
+                         C50 60,90 60,70 120 Z"
+                      fill="url(#petalGrad${i})"/>
+            </g>
+        </svg>
+        `;
+
+        document.body.appendChild(tulip);
+
+        /* falling petals realistic */
+        setTimeout(()=>{
+            for(let p=0;p<5;p++){
+                let petal=document.createElement("div");
+                petal.className="petal";
+                petal.style.left=(tulip.offsetLeft+60)+"px";
+                petal.style.top=(window.innerHeight-200)+"px";
+                petal.style.width="16px";
+                petal.style.height="22px";
+                petal.style.background=c.mid;
+                petal.style.borderRadius="60% 40% 60% 40%";
+                petal.style.boxShadow="0 4px 8px rgba(0,0,0,0.3)";
+                petal.style.animationDuration=(5+Math.random()*3)+"s";
+                petal.style.animationDelay=(p*0.5)+"s";
+                document.body.appendChild(petal);
+            }
+        },3000);
+    }
+}
+
+
+createTulips();
+
+/* INTRO FLOW */
 setTimeout(()=>{
     intro.style.display="none";
     msg.style.opacity=1;
-    fadeInMusic();
-
     setTimeout(()=>{
         msg.style.opacity=0;
         startFireworks();
     },5000);
-
 },4000);
 
-/* MUSIC FADE */
-function fadeInMusic(){
-    music.volume=0;
-    music.play().catch(()=>{});
-    let v=0;
-    let fade=setInterval(()=>{
-        if(v<1){
-            v+=0.05;
-            music.volume=v;
-        }else clearInterval(fade);
-    },200);
-}
-
-/* HEART FORMULA */
-function heart(t){
-    return {
-        x:16*Math.pow(Math.sin(t),3),
-        y:-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))
-    }
-}
-
+/* FIREWORKS */
 let particles=[];
 
-/* NORMAL EXPLOSION */
-function explodeNormal(x,y){
-    for(let i=0;i<90;i++){
-        let angle=Math.random()*Math.PI*2;
-        particles.push({
-            x,y,
-            dx:Math.cos(angle)*5,
-            dy:Math.sin(angle)*5,
-            alpha:1,
-            color:`hsl(${Math.random()*360},100%,60%)`
-        });
-    }
-}
+function explode(x,y,type){
 
-/* HEART EXPLOSION */
-function explodeHeart(x,y){
-    for(let t=0;t<Math.PI*2;t+=0.1){
-        let pos=heart(t);
-        particles.push({
-            x,y,
-            dx:pos.x/3,
-            dy:pos.y/3,
-            alpha:1,
-            color:"pink"
-        });
-    }
-}
-
-/* TEXT MY EXPLOSION */
-function explodeText(x,y){
-
-    const off = document.createElement("canvas");
-    const offCtx = off.getContext("2d");
-    off.width = 300;
-    off.height = 150;
-
-    offCtx.fillStyle="white";
-    offCtx.font="bold 100px Arial";
-    offCtx.textAlign="center";
-    offCtx.fillText("MY",150,100);
-
-    const data = offCtx.getImageData(0,0,300,150).data;
-
-    for(let i=0;i<data.length;i+=4){
-        if(data[i+3] > 150){
-            let px = (i/4)%300;
-            let py = Math.floor((i/4)/300);
-
+    if(type==="normal"){
+        for(let i=0;i<100;i++){
+            let angle=Math.random()*Math.PI*2;
             particles.push({
-                x:x,
-                y:y,
-                dx:(px-150)/25,
-                dy:(py-75)/25,
+                x,y,
+                dx:Math.cos(angle)*6,
+                dy:Math.sin(angle)*6,
                 alpha:1,
-                color:"white"
+                color:`hsl(${Math.random()*360},100%,60%)`
             });
+        }
+    }
+
+    if(type==="text"){
+        const off=document.createElement("canvas");
+        const octx=off.getContext("2d");
+        off.width=300;
+        off.height=150;
+        octx.fillStyle="white";
+        octx.font="bold 100px Arial";
+        octx.textAlign="center";
+        octx.fillText("MY",150,100);
+        const data=octx.getImageData(0,0,300,150).data;
+
+        for(let i=0;i<data.length;i+=4){
+            if(data[i+3]>150){
+                let px=(i/4)%300;
+                let py=Math.floor((i/4)/300);
+                particles.push({
+                    x:x,
+                    y:y,
+                    dx:(px-150)/20,
+                    dy:(py-75)/20,
+                    alpha:1,
+                    color:"#ffffff"
+                });
+            }
         }
     }
 }
 
-/* ANIMATION LOOP */
 function animate(){
     requestAnimationFrame(animate);
 
-    ctx.fillStyle="rgba(0,0,0,0.2)";
+    ctx.fillStyle="rgba(0,0,0,0.15)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
     for(let i=particles.length-1;i>=0;i--){
         let p=particles[i];
-
         p.x+=p.dx;
         p.y+=p.dy;
-        p.dy+=0.03;
+        p.dy+=0.04;
         p.alpha-=0.015;
 
         ctx.globalAlpha=p.alpha;
+        ctx.shadowBlur=20;
+        ctx.shadowColor=p.color;
         ctx.fillStyle=p.color;
         ctx.beginPath();
-        ctx.arc(p.x,p.y,2,0,Math.PI*2);
+        ctx.arc(p.x,p.y,2.5,0,Math.PI*2);
         ctx.fill();
 
         if(p.alpha<=0) particles.splice(i,1);
     }
-
     ctx.globalAlpha=1;
 }
 
 function startFireworks(){
     animate();
-
     setInterval(()=>{
         let r=Math.random();
         let x=Math.random()*canvas.width;
         let y=Math.random()*canvas.height/2;
 
-        if(r<0.4) explodeNormal(x,y);
-        else if(r<0.7) explodeHeart(x,y);
-        else explodeText(canvas.width/2,canvas.height/3);
+        if(r<0.6) explode(x,y,"normal");
+        else explode(canvas.width/2,canvas.height/3,"text");
 
     },1200);
 }
