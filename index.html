@@ -163,8 +163,8 @@ function showHeartImages(){
     const container=document.getElementById("heartImages");
 
     const images=[
-        "img1.jpg","img2.jpg","img3.jpg","img4.jpg","img5.jpg",
-        "img6.jpg","img7.jpg","img8.jpg","img9.jpg","img10.jpg"
+        "img.jpg","img.jpg","img.jpg","img.jpg","img.jpg",
+        "img.jpg","img.jpg","img.jpg","img.jpg","img.jpg"
     ];
 
     const centerX=window.innerWidth/2;
@@ -188,8 +188,8 @@ function showHeartImages(){
         container.appendChild(img);
 
         setTimeout(()=>{
-            img.style.left=(centerX+x*scale-55)+"px;
-            img.style.top=(centerY+y*scale-55)+"px;
+            img.style.left=(centerX+x*scale-55)+"px";
+            img.style.top=(centerY+y*scale-55)+"px";
             img.style.opacity=1;
 
             /* mỗi ảnh thở riêng */
