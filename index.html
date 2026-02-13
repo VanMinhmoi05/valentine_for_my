@@ -14,7 +14,7 @@ body{
     color:white;
 }
 
-/* ===== CINEMATIC INTRO ===== */
+/* ===== INTRO ===== */
 .intro{
     position:absolute;
     width:100%;
@@ -22,12 +22,12 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    font-size:40px;
-    letter-spacing:5px;
-    animation:fadeIntro 4s forwards;
+    font-size:45px;
+    letter-spacing:8px;
+    animation:introFade 4s forwards;
 }
 
-@keyframes fadeIntro{
+@keyframes introFade{
     0%{opacity:0; transform:scale(1.2);}
     30%{opacity:1;}
     80%{opacity:1;}
@@ -42,10 +42,16 @@ body{
     transform:translate(-50%,-50%);
     background:white;
     color:black;
-    padding:30px 50px;
+    padding:30px 60px;
     border-radius:20px;
     cursor:pointer;
     display:none;
+    font-size:20px;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translate(-50%,-50%) scale(1.05);
 }
 
 /* ===== MESSAGE ===== */
@@ -60,11 +66,11 @@ body{
     transition:2s;
 }
 
-/* ===== HEART PHOTO GRID ===== */
+/* ===== PHOTOS ===== */
 .photo{
     position:absolute;
-    width:110px;
-    height:110px;
+    width:100px;
+    height:100px;
     object-fit:cover;
     border-radius:15px;
     animation:pulse 2.5s infinite;
@@ -88,7 +94,6 @@ canvas{
 <body>
 
 <div class="intro">FOR MY ❤️</div>
-
 <div class="card" onclick="openCard()">💌 Open</div>
 
 <div class="message" id="msg">
@@ -100,12 +105,13 @@ Anh mong những ngày sau này<br>
 
 <canvas id="fireworks"></canvas>
 
-<audio id="music" loop>
-<source src="https://www.bensound.com/bensound-music/bensound-romantic.mp3">
+<audio id="music" loop 
+src="https://cdn.pixabay.com/audio/2022/03/15/audio_6b7b8df8d8.mp3">
 </audio>
 
 <script>
 
+// ===== INTRO TIMER =====
 setTimeout(()=>{
     document.querySelector(".intro").style.display="none";
     document.querySelector(".card").style.display="block";
@@ -130,7 +136,9 @@ function openCard(){
 function fadeInMusic(){
     let music=document.getElementById("music");
     music.volume=0;
-    music.play();
+
+    music.play().catch(()=>{});
+
     let vol=0;
     let fade=setInterval(()=>{
         if(vol<1){
@@ -156,8 +164,8 @@ function heartEquation(t){
 }
 
 function createHeartImageShape(){
-    let scale=15;
-    for(let t=0;t<Math.PI*2;t+=0.2){
+    let scale=12;
+    for(let t=0;t<Math.PI*2;t+=0.15){
         let pos=heartEquation(t);
         let img=document.createElement("img");
         img.src=imgs[Math.floor(Math.random()*imgs.length)];
@@ -186,19 +194,33 @@ function startFireworks(){
                 particles.push({
                     x:x,
                     y:y,
-                    dx:pos.x,
-                    dy:pos.y,
+                    dx:pos.x/3,
+                    dy:pos.y/3,
                     alpha:1,
                     color:"pink"
                 });
             }
         }
+
         else if(type==="text"){
             let text="MY";
-            ctx.font="bold 60px Arial";
+            ctx.font="bold 80px Arial";
+            ctx.fillStyle="white";
             let width=ctx.measureText(text).width;
             ctx.fillText(text,x-width/2,y);
+
+            for(let i=0;i<120;i++){
+                particles.push({
+                    x:x,
+                    y:y,
+                    dx:(Math.random()-0.5)*6,
+                    dy:(Math.random()-0.5)*6,
+                    alpha:1,
+                    color:"white"
+                });
+            }
         }
+
         else{
             for(let i=0;i<80;i++){
                 particles.push({
@@ -223,13 +245,17 @@ function startFireworks(){
             p.y+=p.dy;
             p.dy+=0.05;
             p.alpha-=0.01;
+
             ctx.globalAlpha=p.alpha;
             ctx.fillStyle=p.color;
             ctx.beginPath();
             ctx.arc(p.x,p.y,2,0,Math.PI*2);
             ctx.fill();
-            if(p.alpha<=0)particles.splice(i,1);
+
+            if(p.alpha<=0) particles.splice(i,1);
         });
+
+        ctx.globalAlpha=1;
     }
 
     animate();
