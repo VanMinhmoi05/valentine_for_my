@@ -9,12 +9,12 @@
 body{
     margin:0;
     overflow:hidden;
-    font-family:'Segoe UI',sans-serif;
     background:black;
+    font-family:'Segoe UI',sans-serif;
     color:white;
 }
 
-/* ===== INTRO ===== */
+/* INTRO */
 .intro{
     position:absolute;
     width:100%;
@@ -31,55 +31,40 @@ body{
     0%{opacity:0; transform:scale(1.2);}
     30%{opacity:1;}
     80%{opacity:1;}
-    100%{opacity:0; transform:scale(1);}
+    100%{opacity:0;}
 }
 
-/* ===== CARD ===== */
-.card{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    background:white;
-    color:black;
-    padding:30px 60px;
-    border-radius:20px;
-    cursor:pointer;
-    display:none;
-    font-size:20px;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:translate(-50%,-50%) scale(1.05);
-}
-
-/* ===== MESSAGE ===== */
+/* MESSAGE */
 .message{
     position:absolute;
     top:50%;
     left:50%;
     transform:translate(-50%,-50%);
     text-align:center;
-    font-size:28px;
+    font-size:26px;
     opacity:0;
     transition:2s;
 }
 
-/* ===== PHOTOS ===== */
+/* PHOTOS */
 .photo{
     position:absolute;
-    width:100px;
-    height:100px;
+    width:85px;
+    height:85px;
     object-fit:cover;
     border-radius:15px;
-    animation:pulse 2.5s infinite;
+    box-shadow:0 0 20px rgba(255,105,180,0.7);
+    opacity:0;
+    transition:1s;
 }
 
-@keyframes pulse{
-    0%{transform:scale(1);}
-    50%{transform:scale(1.07);}
-    100%{transform:scale(1);}
+/* FLOATING NAME */
+.name{
+    position:absolute;
+    font-size:28px;
+    font-weight:bold;
+    color:pink;
+    pointer-events:none;
 }
 
 canvas{
@@ -94,7 +79,6 @@ canvas{
 <body>
 
 <div class="intro">FOR MY ❤️</div>
-<div class="card" onclick="openCard()">💌 Open</div>
 
 <div class="message" id="msg">
 Happy Valentine My ❤️<br><br>
@@ -105,50 +89,54 @@ Anh mong những ngày sau này<br>
 
 <canvas id="fireworks"></canvas>
 
-<audio id="music" loop 
+<audio id="music" loop
 src="https://cdn.pixabay.com/audio/2022/03/15/audio_6b7b8df8d8.mp3">
 </audio>
 
 <script>
+document.addEventListener("DOMContentLoaded", function(){
 
-// ===== INTRO TIMER =====
+const intro = document.querySelector(".intro");
+const msg = document.getElementById("msg");
+const music = document.getElementById("music");
+
+/* SAU INTRO */
 setTimeout(()=>{
-    document.querySelector(".intro").style.display="none";
-    document.querySelector(".card").style.display="block";
-},4000);
-
-// ===== OPEN CARD =====
-function openCard(){
-    document.querySelector(".card").style.display="none";
-    let m=document.getElementById("msg");
-    m.style.opacity=1;
-
+    intro.style.display="none";
+    msg.style.opacity=1;
     fadeInMusic();
 
     setTimeout(()=>{
-        m.style.opacity=0;
-        createHeartImageShape();
+        msg.style.opacity=0;
+        createHeartImages();
+        floatingName();
         startFireworks();
     },5000);
-}
 
-// ===== MUSIC FADE IN =====
+},4000);
+
+/* MUSIC FADE */
 function fadeInMusic(){
-    let music=document.getElementById("music");
     music.volume=0;
-
     music.play().catch(()=>{});
-
-    let vol=0;
+    let v=0;
     let fade=setInterval(()=>{
-        if(vol<1){
-            vol+=0.05;
-            music.volume=vol;
+        if(v<1){
+            v+=0.05;
+            music.volume=v;
         }else clearInterval(fade);
     },200);
 }
 
-// ===== HEART IMAGE SHAPE =====
+/* HEART SHAPE */
+function heart(t){
+    return {
+        x:16*Math.pow(Math.sin(t),3),
+        y:-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))
+    }
+}
+
+/* IMAGES */
 const imgs=[
 "https://cdn.pixabay.com/photo/2017/08/30/07/52/love-2696737_640.jpg",
 "https://cdn.pixabay.com/photo/2016/11/29/09/32/love-1867285_640.jpg",
@@ -156,27 +144,58 @@ const imgs=[
 "https://cdn.pixabay.com/photo/2016/03/09/09/30/love-1246428_640.jpg"
 ];
 
-function heartEquation(t){
-    return {
-        x:16*Math.pow(Math.sin(t),3),
-        y:-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))
-    }
-}
-
-function createHeartImageShape(){
-    let scale=12;
-    for(let t=0;t<Math.PI*2;t+=0.15){
-        let pos=heartEquation(t);
+function createHeartImages(){
+    let scale=11;
+    for(let t=0;t<Math.PI*2;t+=0.2){
+        let pos=heart(t);
         let img=document.createElement("img");
         img.src=imgs[Math.floor(Math.random()*imgs.length)];
         img.className="photo";
-        img.style.left=(window.innerWidth/2 + pos.x*scale -50)+"px";
-        img.style.top=(window.innerHeight/2 + pos.y*scale -50)+"px";
+
+        let x=window.innerWidth/2 + pos.x*scale -42;
+        let y=window.innerHeight/2 + pos.y*scale -42;
+
+        img.style.left=x+"px";
+        img.style.top=y+"px";
+        img.style.transform="rotate("+(Math.random()*30-15)+"deg)";
         document.body.appendChild(img);
+
+        setTimeout(()=>{ img.style.opacity=1; },200);
+
+        img.animate([
+            { transform: img.style.transform+" scale(1)" },
+            { transform: img.style.transform+" scale(1.08)" },
+            { transform: img.style.transform+" scale(1)" }
+        ],{
+            duration:2500,
+            iterations:Infinity
+        });
     }
 }
 
-// ===== FIREWORKS =====
+/* FLOATING NAME */
+function floatingName(){
+    setInterval(()=>{
+        let n=document.createElement("div");
+        n.className="name";
+        n.innerText="My";
+        n.style.left=Math.random()*window.innerWidth+"px";
+        n.style.top=window.innerHeight+"px";
+        document.body.appendChild(n);
+
+        n.animate([
+            { transform:"translateY(0)", opacity:1 },
+            { transform:"translateY(-600px)", opacity:0 }
+        ],{
+            duration:6000,
+            easing:"linear"
+        });
+
+        setTimeout(()=>n.remove(),6000);
+    },1000);
+}
+
+/* FIREWORKS */
 function startFireworks(){
     const canvas=document.getElementById("fireworks");
     const ctx=canvas.getContext("2d");
@@ -185,51 +204,21 @@ function startFireworks(){
 
     let particles=[];
 
-    function createExplosion(x,y,type){
-        let color=`hsl(${Math.random()*360},100%,60%)`;
-
+    function explode(x,y,type){
         if(type==="heart"){
-            for(let t=0;t<Math.PI*2;t+=0.1){
-                let pos=heartEquation(t);
-                particles.push({
-                    x:x,
-                    y:y,
-                    dx:pos.x/3,
-                    dy:pos.y/3,
-                    alpha:1,
-                    color:"pink"
-                });
+            for(let t=0;t<Math.PI*2;t+=0.12){
+                let pos=heart(t);
+                particles.push({x,y,dx:pos.x/3,dy:pos.y/3,a:1,color:"pink"});
             }
-        }
-
-        else if(type==="text"){
-            let text="MY";
-            ctx.font="bold 80px Arial";
-            ctx.fillStyle="white";
-            let width=ctx.measureText(text).width;
-            ctx.fillText(text,x-width/2,y);
-
-            for(let i=0;i<120;i++){
-                particles.push({
-                    x:x,
-                    y:y,
-                    dx:(Math.random()-0.5)*6,
-                    dy:(Math.random()-0.5)*6,
-                    alpha:1,
-                    color:"white"
-                });
-            }
-        }
-
-        else{
+        }else{
             for(let i=0;i<80;i++){
+                let angle=Math.random()*Math.PI*2;
                 particles.push({
-                    x:x,
-                    y:y,
-                    dx:Math.cos(Math.random()*2*Math.PI)*5,
-                    dy:Math.sin(Math.random()*2*Math.PI)*5,
-                    alpha:1,
-                    color:color
+                    x,y,
+                    dx:Math.cos(angle)*5,
+                    dy:Math.sin(angle)*5,
+                    a:1,
+                    color:`hsl(${Math.random()*360},100%,60%)`
                 });
             }
         }
@@ -240,21 +229,20 @@ function startFireworks(){
         ctx.fillStyle="rgba(0,0,0,0.2)";
         ctx.fillRect(0,0,canvas.width,canvas.height);
 
-        particles.forEach((p,i)=>{
+        for(let i=particles.length-1;i>=0;i--){
+            let p=particles[i];
             p.x+=p.dx;
             p.y+=p.dy;
-            p.dy+=0.05;
-            p.alpha-=0.01;
+            p.a-=0.02;
 
-            ctx.globalAlpha=p.alpha;
+            ctx.globalAlpha=p.a;
             ctx.fillStyle=p.color;
             ctx.beginPath();
             ctx.arc(p.x,p.y,2,0,Math.PI*2);
             ctx.fill();
 
-            if(p.alpha<=0) particles.splice(i,1);
-        });
-
+            if(p.a<=0) particles.splice(i,1);
+        }
         ctx.globalAlpha=1;
     }
 
@@ -262,14 +250,13 @@ function startFireworks(){
 
     setInterval(()=>{
         let r=Math.random();
-        if(r<0.4) createExplosion(Math.random()*canvas.width,Math.random()*canvas.height/2,"normal");
-        else if(r<0.7) createExplosion(Math.random()*canvas.width,Math.random()*canvas.height/2,"heart");
-        else createExplosion(canvas.width/2,canvas.height/3,"text");
+        if(r<0.5) explode(Math.random()*canvas.width,Math.random()*canvas.height/2,"normal");
+        else explode(Math.random()*canvas.width,Math.random()*canvas.height/2,"heart");
     },1200);
 }
 
+});
 </script>
 
 </body>
 </html>
-
