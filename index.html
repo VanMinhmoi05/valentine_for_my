@@ -46,27 +46,6 @@ body{
     transition:2s;
 }
 
-/* PHOTOS */
-.photo{
-    position:absolute;
-    width:85px;
-    height:85px;
-    object-fit:cover;
-    border-radius:15px;
-    box-shadow:0 0 20px rgba(255,105,180,0.7);
-    opacity:0;
-    transition:1s;
-}
-
-/* FLOATING NAME */
-.name{
-    position:absolute;
-    font-size:28px;
-    font-weight:bold;
-    color:pink;
-    pointer-events:none;
-}
-
 canvas{
     position:fixed;
     top:0;
@@ -99,8 +78,13 @@ document.addEventListener("DOMContentLoaded", function(){
 const intro = document.querySelector(".intro");
 const msg = document.getElementById("msg");
 const music = document.getElementById("music");
+const canvas = document.getElementById("fireworks");
+const ctx = canvas.getContext("2d");
 
-/* SAU INTRO */
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+/* START SEQUENCE */
 setTimeout(()=>{
     intro.style.display="none";
     msg.style.opacity=1;
@@ -108,8 +92,6 @@ setTimeout(()=>{
 
     setTimeout(()=>{
         msg.style.opacity=0;
-        createHeartImages();
-        floatingName();
         startFireworks();
     },5000);
 
@@ -128,7 +110,7 @@ function fadeInMusic(){
     },200);
 }
 
-/* HEART SHAPE */
+/* HEART FORMULA */
 function heart(t){
     return {
         x:16*Math.pow(Math.sin(t),3),
@@ -136,122 +118,107 @@ function heart(t){
     }
 }
 
-/* IMAGES */
-const imgs=[
-"https://cdn.pixabay.com/photo/2017/08/30/07/52/love-2696737_640.jpg",
-"https://cdn.pixabay.com/photo/2016/11/29/09/32/love-1867285_640.jpg",
-"https://cdn.pixabay.com/photo/2017/01/06/19/15/heart-1959078_640.jpg",
-"https://cdn.pixabay.com/photo/2016/03/09/09/30/love-1246428_640.jpg"
-];
+let particles=[];
 
-function createHeartImages(){
-    let scale=11;
-    for(let t=0;t<Math.PI*2;t+=0.2){
+/* NORMAL EXPLOSION */
+function explodeNormal(x,y){
+    for(let i=0;i<90;i++){
+        let angle=Math.random()*Math.PI*2;
+        particles.push({
+            x,y,
+            dx:Math.cos(angle)*5,
+            dy:Math.sin(angle)*5,
+            alpha:1,
+            color:`hsl(${Math.random()*360},100%,60%)`
+        });
+    }
+}
+
+/* HEART EXPLOSION */
+function explodeHeart(x,y){
+    for(let t=0;t<Math.PI*2;t+=0.1){
         let pos=heart(t);
-        let img=document.createElement("img");
-        img.src=imgs[Math.floor(Math.random()*imgs.length)];
-        img.className="photo";
-
-        let x=window.innerWidth/2 + pos.x*scale -42;
-        let y=window.innerHeight/2 + pos.y*scale -42;
-
-        img.style.left=x+"px";
-        img.style.top=y+"px";
-        img.style.transform="rotate("+(Math.random()*30-15)+"deg)";
-        document.body.appendChild(img);
-
-        setTimeout(()=>{ img.style.opacity=1; },200);
-
-        img.animate([
-            { transform: img.style.transform+" scale(1)" },
-            { transform: img.style.transform+" scale(1.08)" },
-            { transform: img.style.transform+" scale(1)" }
-        ],{
-            duration:2500,
-            iterations:Infinity
+        particles.push({
+            x,y,
+            dx:pos.x/3,
+            dy:pos.y/3,
+            alpha:1,
+            color:"pink"
         });
     }
 }
 
-/* FLOATING NAME */
-function floatingName(){
-    setInterval(()=>{
-        let n=document.createElement("div");
-        n.className="name";
-        n.innerText="My";
-        n.style.left=Math.random()*window.innerWidth+"px";
-        n.style.top=window.innerHeight+"px";
-        document.body.appendChild(n);
+/* TEXT MY EXPLOSION */
+function explodeText(x,y){
 
-        n.animate([
-            { transform:"translateY(0)", opacity:1 },
-            { transform:"translateY(-600px)", opacity:0 }
-        ],{
-            duration:6000,
-            easing:"linear"
-        });
+    const off = document.createElement("canvas");
+    const offCtx = off.getContext("2d");
+    off.width = 300;
+    off.height = 150;
 
-        setTimeout(()=>n.remove(),6000);
-    },1000);
+    offCtx.fillStyle="white";
+    offCtx.font="bold 100px Arial";
+    offCtx.textAlign="center";
+    offCtx.fillText("MY",150,100);
+
+    const data = offCtx.getImageData(0,0,300,150).data;
+
+    for(let i=0;i<data.length;i+=4){
+        if(data[i+3] > 150){
+            let px = (i/4)%300;
+            let py = Math.floor((i/4)/300);
+
+            particles.push({
+                x:x,
+                y:y,
+                dx:(px-150)/25,
+                dy:(py-75)/25,
+                alpha:1,
+                color:"white"
+            });
+        }
+    }
 }
 
-/* FIREWORKS */
+/* ANIMATION LOOP */
+function animate(){
+    requestAnimationFrame(animate);
+
+    ctx.fillStyle="rgba(0,0,0,0.2)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    for(let i=particles.length-1;i>=0;i--){
+        let p=particles[i];
+
+        p.x+=p.dx;
+        p.y+=p.dy;
+        p.dy+=0.03;
+        p.alpha-=0.015;
+
+        ctx.globalAlpha=p.alpha;
+        ctx.fillStyle=p.color;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,2,0,Math.PI*2);
+        ctx.fill();
+
+        if(p.alpha<=0) particles.splice(i,1);
+    }
+
+    ctx.globalAlpha=1;
+}
+
 function startFireworks(){
-    const canvas=document.getElementById("fireworks");
-    const ctx=canvas.getContext("2d");
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
-
-    let particles=[];
-
-    function explode(x,y,type){
-        if(type==="heart"){
-            for(let t=0;t<Math.PI*2;t+=0.12){
-                let pos=heart(t);
-                particles.push({x,y,dx:pos.x/3,dy:pos.y/3,a:1,color:"pink"});
-            }
-        }else{
-            for(let i=0;i<80;i++){
-                let angle=Math.random()*Math.PI*2;
-                particles.push({
-                    x,y,
-                    dx:Math.cos(angle)*5,
-                    dy:Math.sin(angle)*5,
-                    a:1,
-                    color:`hsl(${Math.random()*360},100%,60%)`
-                });
-            }
-        }
-    }
-
-    function animate(){
-        requestAnimationFrame(animate);
-        ctx.fillStyle="rgba(0,0,0,0.2)";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-
-        for(let i=particles.length-1;i>=0;i--){
-            let p=particles[i];
-            p.x+=p.dx;
-            p.y+=p.dy;
-            p.a-=0.02;
-
-            ctx.globalAlpha=p.a;
-            ctx.fillStyle=p.color;
-            ctx.beginPath();
-            ctx.arc(p.x,p.y,2,0,Math.PI*2);
-            ctx.fill();
-
-            if(p.a<=0) particles.splice(i,1);
-        }
-        ctx.globalAlpha=1;
-    }
-
     animate();
 
     setInterval(()=>{
         let r=Math.random();
-        if(r<0.5) explode(Math.random()*canvas.width,Math.random()*canvas.height/2,"normal");
-        else explode(Math.random()*canvas.width,Math.random()*canvas.height/2,"heart");
+        let x=Math.random()*canvas.width;
+        let y=Math.random()*canvas.height/2;
+
+        if(r<0.4) explodeNormal(x,y);
+        else if(r<0.7) explodeHeart(x,y);
+        else explodeText(canvas.width/2,canvas.height/3);
+
     },1200);
 }
 
